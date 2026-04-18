@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2b75c60a-7f7d-4e31-990f-73a93264ebd9"
+      }
+    },
+    "android": {
+      "package": "com.naijagig.app"
+    }
+  }
+}

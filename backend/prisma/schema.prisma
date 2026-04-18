@@ -1,0 +1,203 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CLIENT
+  ARTISAN
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceCategory {
+  ELECTRICIAN
+  PLUMBER
+  CARPENTER
+  DJ
+  MECHANIC
+  PAINTER
+  CLEANER
+  OTHER
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  role              Role      @default(CLIENT)
+  isEmailVerified   Boolean   @default(false)
+  verificationCode  String?
+  codeExpiresAt     DateTime?
+  name              String
+  phone             String?
+  profileImage      String?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  expoPushToken String?
+
+  artisanProfile    ArtisanProfile?
+  bookingsAsClient  Booking[]       @relation("ClientBookings")
+  bookingsAsArtisan Booking[]       @relation("ArtisanBookings")
+  reviewsGiven      Review[]        @relation("ReviewAuthor")
+  reviewsReceived   Review[]        @relation("ReviewRecipient")
+  sentMessages      Message[]
+  bankAccount       BankAccount?
+  withdrawalRequests WithdrawalRequest[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model ArtisanProfile {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceCategory ServiceCategory
+  bio             String?         @db.Text
+  hourlyRate      Float?
+  yearsExperience Int?
+  latitude        Float
+  longitude       Float
+  address         String?
+  serviceArea     String?
+  isVerified      Boolean         @default(false)
+  isApproved      Boolean         @default(true)
+  totalJobs       Int             @default(0)
+  averageRating   Float           @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([serviceCategory])
+  @@index([isApproved])
+  @@index([latitude, longitude])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  clientId        String
+  client          User          @relation("ClientBookings", fields: [clientId], references: [id])
+  artisanId       String
+  artisan         User          @relation("ArtisanBookings", fields: [artisanId], references: [id])
+  status          BookingStatus @default(PENDING)
+  serviceType     ServiceCategory
+  description     String        @db.Text
+  scheduledDate   DateTime?
+  latitude        Float
+  longitude       Float
+  address         String
+  estimatedPrice  Float?
+  finalPrice      Float?
+  paymentMethod   String        @default("CASH")
+  isPaid          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  completedAt     DateTime?
+  completionNotes String?       @db.Text
+  completionPhotos Json?        // store array of photo URLs as JSON
+
+  review          Review?
+  conversation    Conversation?
+
+  @@index([clientId])
+  @@index([artisanId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Conversation {
+  id          String    @id @default(cuid())
+  bookingId   String    @unique
+  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+
+  @@index([bookingId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  content        String       @db.Text
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  authorId    String
+  author      User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  recipientId String
+  recipient   User     @relation("ReviewRecipient", fields: [recipientId], references: [id])
+  rating      Int
+  comment     String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([recipientId])
+  @@index([rating])
+}
+
+model BankAccount {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountName   String
+  bankName      String
+  accountNumber String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  withdrawalRequests WithdrawalRequest[]
+
+  @@index([userId])
+}
+
+model WithdrawalRequest {
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  amount        Float
+  status        WithdrawalStatus  @default(PENDING)
+  bankAccountId String
+  bankAccount   BankAccount       @relation(fields: [bankAccountId], references: [id])
+  processedAt   DateTime?
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
