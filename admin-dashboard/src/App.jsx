@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import DashboardLayout from './layouts/DashboardLayout';
-import Dashboard from './pages/Dashboard';      // your safe dashboard
+import Dashboard from './pages/Dashboard';     
 import Artisans from './pages/Artisans';
 import Bookings from './pages/Bookings';
 import Withdrawals from './pages/Withdrawals';

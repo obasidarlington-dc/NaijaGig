@@ -13,8 +13,6 @@ const BG_IMAGE = {
   uri: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
 };
 
-// Or use a local image:
-// import BG_IMAGE from '../../assets/technician.jpg';
 
 export default function WelcomeScreen({ navigation }) {
   return (
@@ -38,7 +36,7 @@ export default function WelcomeScreen({ navigation }) {
             color: 'white', fontSize: 22, fontWeight: '800',
             letterSpacing: 3, textAlign: 'center',
           }}>
-            NAIJAGIG
+            ProxiCraft
           </Text>
         </View>
 
